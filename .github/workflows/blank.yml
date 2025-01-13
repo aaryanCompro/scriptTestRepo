@@ -48,7 +48,7 @@ jobs:
           https://synthetics.newrelic.com/synthetics/api/v3/monitors/${{ env.MONITOR_ID }}/script \
           -H "X-Api-Key:${{ env.NEW_RELIC_API_KEY }}" \
           -H "Content-Type: application/json" \
-          -d @seleniumScriptTeacher.js)
+          -d @scripts/seleniumScriptTeacher.js)
         
         # Check for HTTP status code 2xx (successful request)
         if [[ "$response" -lt 200 || "$response" -ge 300 ]]; then
