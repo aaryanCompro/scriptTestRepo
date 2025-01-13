@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Encode test.js to Base64
+      - name: Encode seleniumScriptTeacher.js to Base64
         id: encode-script
         run: |
           if [ ! -f "seleniumScriptTeacher.js" ]; then
@@ -30,16 +30,16 @@ jobs:
           MONITOR_ID: ${{ secrets.MONITOR_ID }}
           BASE64_SCRIPT: ${{ env.encoded_script }}
         run: |
-          curl -v \
-            -X PUT \
+          response=$(curl -s -o response.json -w "%{http_code}" -X PUT \
             -H "Api-Key:$API_KEY" \
-            -H 'Content-Type: application/json' \
+            -H "Content-Type: application/json" \
             "$API_ENDPOINT/v3/monitors/$MONITOR_ID" \
-            -d "{\"name\": \"Updated Monitor\", \"type\": \"SCRIPT_BROWSER\", \"frequency\": 15, \"uri\": \"http://my-uri.com/\", \"locations\": [\"AWS_US_WEST_1\"], \"status\": \"enabled\", \"slaThreshold\": \"7.0\", \"script\": \"$BASE64_SCRIPT\" }"
+            -d "{ \"name\": \"Updated Monitor\", \"type\": \"SCRIPT_BROWSER\", \"frequency\": 15, \"uri\": \"http://my-uri.com/\", \"locations\": [\"AWS_US_WEST_1\"], \"status\": \"enabled\", \"slaThreshold\": \"7.0\", \"script\": \"$BASE64_SCRIPT\" }")
 
-          if [ $? -ne 0 ]; then
-            echo "Failed to update the New Relic monitor."
-            exit 1
-          else
+          if [ "$response" -eq 204 ]; then
             echo "New Relic monitor updated successfully."
+          else
+            echo "Failed to update the New Relic monitor. Response:"
+            cat response.json
+            exit 1
           fi
