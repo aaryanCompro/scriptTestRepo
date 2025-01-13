@@ -18,8 +18,13 @@ jobs:
       with:
         node-version: '16'  # Choose the appropriate Node.js version
 
-    - name: Install dependencies
-      run: npm install
+    - name: Check if package.json exists and install dependencies
+      run: |
+        if [ -f "package.json" ]; then
+          npm install
+        else
+          echo "No package.json found, skipping npm install."
+        fi
 
     - name: Get New Relic API key and Monitor ID from secrets
       run: |
