@@ -16,8 +16,8 @@ jobs:
       - name: Encode test.js to Base64
         id: encode-script
         run: |
-          if [ ! -f "test.js" ]; then
-            echo "Error: test.js file not found."
+          if [ ! -f "seleniumScriptTeacher.js" ]; then
+            echo "Error: seleniumScriptTeacher.js file not found."
             exit 1
           fi
           base64_encoded_script=$(base64 -w 0 test.js)
