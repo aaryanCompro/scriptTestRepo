@@ -1,45 +1,57 @@
-name: Update New Relic Synthetic Monitor
+name: Update New Relic Synthetic Monitor Script
 
 on:
   push:
-    paths:
-      - seleniumScriptTeacher.js
+    branches:
+      - main  # Or the branch you want to trigger the workflow on
 
 jobs:
-  update-monitor:
+  update-synthetic-script:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout the repository
+      uses: actions/checkout@v3
 
-      - name: Encode seleniumScriptTeacher.js to Base64
-        id: encode-script
-        run: |
-          if [ ! -f "seleniumScriptTeacher.js" ]; then
-            echo "Error: seleniumScriptTeacher.js file not found."
-            exit 1
-          fi
-          base64_encoded_script=$(base64 -w 0 seleniumScriptTeacher.js)
-          echo "encoded_script=$base64_encoded_script" >> $GITHUB_ENV
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'  # Choose the appropriate Node.js version
 
-      - name: Update New Relic Synthetic Monitor
-        env:
-          API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
-          API_ENDPOINT: ${{ secrets.NEW_RELIC_API_ENDPOINT }}
-          MONITOR_ID: ${{ secrets.MONITOR_ID }}
-          BASE64_SCRIPT: ${{ env.encoded_script }}
-        run: |
-          response=$(curl -s -o response.json -w "%{http_code}" -X PUT \
-            -H "Api-Key:$API_KEY" \
-            -H "Content-Type: application/json" \
-            "$API_ENDPOINT/v3/monitors/$MONITOR_ID" \
-            -d "{ \"name\": \"Updated Monitor\", \"type\": \"SCRIPT_BROWSER\", \"frequency\": 15, \"uri\": \"http://my-uri.com/\", \"locations\": [\"AWS_US_WEST_1\"], \"status\": \"enabled\", \"slaThreshold\": \"7.0\", \"script\": \"$BASE64_SCRIPT\" }")
+    - name: Install dependencies
+      run: npm install
 
-          if [ "$response" -eq 204 ]; then
-            echo "New Relic monitor updated successfully."
-          else
-            echo "Failed to update the New Relic monitor. Response:"
-            cat response.json
-            exit 1
-          fi
+    - name: Get New Relic API key and Monitor ID from secrets
+      run: |
+        echo "NEW_RELIC_API_KEY=${{ secrets.NEW_RELIC_API_KEY }}" >> $GITHUB_ENV
+        echo "MONITOR_ID=${{ secrets.MONITOR_ID }}" >> $GITHUB_ENV
+
+    - name: Update New Relic Synthetics monitor script
+      run: |
+        set -e  # Exit immediately if a command fails
+        
+        # Ensure the script exists
+        if [ ! -f "scripts/new-relic-script.js" ]; then
+          echo "Error: New Relic script file not found."
+          exit 1
+        fi
+        
+        echo "Updating New Relic Synthetic monitor script..."
+        
+        # Attempt to update the script
+        response=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+          https://synthetics.newrelic.com/synthetics/api/v3/monitors/${{ env.MONITOR_ID }}/script \
+          -H "X-Api-Key:${{ env.NEW_RELIC_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d @scripts/new-relic-script.js)
+        
+        # Check for HTTP status code 2xx (successful request)
+        if [[ "$response" -lt 200 || "$response" -ge 300 ]]; then
+          echo "Error: Failed to update New Relic Synthetic script. HTTP Status: $response"
+          exit 1
+        fi
+        
+        echo "Script updated successfully. HTTP Status: $response"
+
+    - name: Confirm update success
+      run: echo "Script update process completed."
