@@ -34,7 +34,7 @@ jobs:
             -H "Api-Key:$API_KEY" \
             -H "Content-Type: application/json" \
             "$API_ENDPOINT/v3/monitors/$MONITOR_ID" \
-            -d "{ \"name\": \"Updated Monitor\", \"type\": \"SCRIPT_BROWSER\", \"frequency\": 15, \"uri\": \"http://my-uri.com/\", \"locations\": [\"AWS_US_WEST_1\"], \"status\": \"enabled\", \"slaThreshold\": \"7.0\", \"script\": \"$BASE64_SCRIPT\" }")
+            -d "{\"script\": \"$BASE64_SCRIPT\" }")
 
           if [ "$response" -eq 204 ]; then
             echo "New Relic monitor updated successfully."
