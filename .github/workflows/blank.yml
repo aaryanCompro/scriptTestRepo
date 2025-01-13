@@ -6,7 +6,7 @@ on:
       - seleniumScriptTeacher.js
 
 jobs:
-  update-script:
+  update-monitor-script:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,10 +23,6 @@ jobs:
           base64_encoded_script=$(base64 -w 0 seleniumScriptTeacher.js)
           echo "encoded_script=$base64_encoded_script" >> $GITHUB_ENV
 
-      - name: Debug Base64 Encoded Script
-        run: |
-          echo "Base64 Encoded Script: ${{ env.encoded_script }}"
-
       - name: Update New Relic Synthetic Monitor Script
         env:
           API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
@@ -34,14 +30,21 @@ jobs:
           MONITOR_UUID: ${{ secrets.MONITOR_UUID }}
           BASE64_SCRIPT: ${{ env.encoded_script }}
         run: |
+          # Prepare the script payload
           scriptPayload="{\"scriptText\": \"$BASE64_SCRIPT\"}"
 
-          response=$(curl -v -X PUT \
+          # Debug: Output the final URL and payload
+          echo "Request URL: $API_ENDPOINT/v3/monitors/$MONITOR_UUID/script"
+          echo "Payload: $scriptPayload"
+
+          # Make the PUT request to update the monitor script
+          response=$(curl -s -o response.json -w "%{http_code}" -X PUT \
             -H "Api-Key:$API_KEY" \
             -H 'Content-Type: application/json' \
             "$API_ENDPOINT/v3/monitors/$MONITOR_UUID/script" \
             -d "$scriptPayload")
 
+          # Check response and output the result
           if [ "$response" -eq 204 ]; then
             echo "New Relic monitor script updated successfully."
           else
