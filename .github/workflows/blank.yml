@@ -1,4 +1,4 @@
-name: Update New Relic Synthetic Monitor
+name: Delete New Relic Synthetic Monitor
 
 on:
   push:
@@ -6,40 +6,27 @@ on:
       - seleniumScriptTeacher.js
 
 jobs:
-  update-monitor:
+  delete-monitor:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Encode seleniumScriptTeacher.js to Base64
-        id: encode-script
-        run: |
-          if [ ! -f "seleniumScriptTeacher.js" ]; then
-            echo "Error: seleniumScriptTeacher.js file not found."
-            exit 1
-          fi
-          base64_encoded_script=$(base64 -w 0 seleniumScriptTeacher.js)
-          echo "encoded_script=$base64_encoded_script" >> $GITHUB_ENV
-
-      - name: Update New Relic Synthetic Monitor
+      - name: Delete New Relic Synthetic Monitor
         env:
           API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
           API_ENDPOINT: ${{ secrets.NEW_RELIC_API_ENDPOINT }}
           MONITOR_ID: ${{ secrets.MONITOR_ID }}
-          BASE64_SCRIPT: ${{ env.encoded_script }}
         run: |
-          response=$(curl -s -o response.json -w "%{http_code}" -X PUT \
+          response=$(curl -s -o response.json -w "%{http_code}" -X DELETE \
             -H "Api-Key:$API_KEY" \
-            -H "Content-Type: application/json" \
-            "$API_ENDPOINT/v3/monitors/$MONITOR_ID" \
-            -d "{ \"name\": \"Updated Monitor\", \"type\": \"SCRIPT_BROWSER\", \"frequency\": 15, \"uri\": \"http://my-uri.com/\", \"locations\": [\"AWS_US_WEST_1\"], \"status\": \"enabled\", \"slaThreshold\": \"7.0\", \"script\": \"$BASE64_SCRIPT\" }")
+            "$API_ENDPOINT/v3/monitors/$MONITOR_ID")
 
           if [ "$response" -eq 204 ]; then
-            echo "New Relic monitor updated successfully."
+            echo "New Relic monitor deleted successfully."
           else
-            echo "Failed to update the New Relic monitor. Response:"
+            echo "Failed to delete the New Relic monitor. Response:"
             cat response.json
             exit 1
           fi
