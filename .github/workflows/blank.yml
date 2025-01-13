@@ -6,46 +6,41 @@ on:
       - seleniumScriptTeacher.js
 
 jobs:
-  update-script:
+  update-monitor-script:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Encode seleniumScriptTeacher.js to Base64
-        id: encode-script
-        run: |
-          if [ ! -f "seleniumScriptTeacher.js" ]; then
-            echo "Error: seleniumScriptTeacher.js file not found."
-            exit 1
-          fi
-          base64_encoded_script=$(base64 -w 0 seleniumScriptTeacher.js)
-          echo "encoded_script=$base64_encoded_script" >> $GITHUB_ENV
+    - name: Base64 encode script
+      id: encode-script
+      run: |
+        script_path="./seleniumScriptTeacher.js"
+        if [ ! -f "$script_path" ]; then
+          echo "Error: Script file does not exist: $script_path"
+          exit 1
+        fi
+        base64Encoded=$(base64 -w 0 "$script_path") 
+        echo "::set-output name=encoded-script::$base64Encoded"
 
-      - name: Debug Base64 Encoded Script
-        run: |
-          echo "Base64 Encoded Script: ${{ env.encoded_script }}"
+    - name: Update Synthetic Monitor Script
+      env:
+        API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
+        MONITOR_UUID: ${{ secrets.NEW_RELIC_MONITOR_UUID }}
+        API_ENDPOINT: https://synthetics.newrelic.com/synthetics/api
+      run: |
+        SCRIPT_PAYLOAD="{\"scriptText\":\"${{ steps.encode-script.outputs.encoded-script }}\"}"
 
-      - name: Update New Relic Synthetic Monitor Script
-        env:
-          API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
-          API_ENDPOINT: ${{ secrets.NEW_RELIC_API_ENDPOINT }}
-          MONITOR_UUID: ${{ secrets.MONITOR_UUID }}
-          BASE64_SCRIPT: ${{ env.encoded_script }}
-        run: |
-          scriptPayload="{\"scriptText\": \"$BASE64_SCRIPT\"}"
+        curl -v -X PUT \
+          -H "Api-Key:$API_KEY" \
+          -H 'Content-Type: application/json' \
+          "$API_ENDPOINT/v3/monitors/$MONITOR_UUID/script" \
+          -d "$SCRIPT_PAYLOAD"
 
-          response=$(curl -v -X PUT \
-            -H "Api-Key:$API_KEY" \
-            -H 'Content-Type: application/json' \
-            "$API_ENDPOINT/v3/monitors/$MONITOR_UUID/script" \
-            -d "$scriptPayload")
+        if [ $? -ne 0 ]; then
+          echo "Error: Failed to update the Synthetic Monitor script."
+          exit 1
+        fi
 
-          if [ "$response" -eq 204 ]; then
-            echo "New Relic monitor script updated successfully."
-          else
-            echo "Failed to update the New Relic monitor script. Response:"
-            cat response.json
-            exit 1
-          fi
+        echo "Synthetic Monitor script updated successfully."
