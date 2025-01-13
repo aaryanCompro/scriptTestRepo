@@ -25,6 +25,15 @@ const config = {
       bundleCardToggleButtonIdReplacer: "mosaic",
     },
   },
+  "Personalised Learning B2": {
+    skills: {
+      Reading: false,
+      Listening: false,
+    },
+    selectors: {
+      bundleCardToggleButtonIdReplacer: "mosaic",
+    },
+  },
 };
 
 
