@@ -1,0 +1,45 @@
+name: Update New Relic Synthetic Monitor
+
+on:
+  push:
+    paths:
+      - seleniumScriptTeacher.js
+
+jobs:
+  update-monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Encode test.js to Base64
+        id: encode-script
+        run: |
+          if [ ! -f "test.js" ]; then
+            echo "Error: test.js file not found."
+            exit 1
+          fi
+          base64_encoded_script=$(base64 -w 0 test.js)
+          echo "encoded_script=$base64_encoded_script" >> $GITHUB_ENV
+
+      - name: Update New Relic Synthetic Monitor
+        env:
+          API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
+          API_ENDPOINT: ${{ secrets.NEW_RELIC_API_ENDPOINT }}
+          MONITOR_ID: ${{ secrets.MONITOR_ID }}
+          BASE64_SCRIPT: ${{ env.encoded_script }}
+        run: |
+          curl -v \
+            -X PUT \
+            -H "Api-Key:$API_KEY" \
+            -H 'Content-Type: application/json' \
+            "$API_ENDPOINT/v3/monitors/$MONITOR_ID" \
+            -d "{\"name\": \"Updated Monitor\", \"type\": \"SCRIPT_BROWSER\", \"frequency\": 15, \"uri\": \"http://my-uri.com/\", \"locations\": [\"AWS_US_WEST_1\"], \"status\": \"enabled\", \"slaThreshold\": \"7.0\", \"script\": \"$BASE64_SCRIPT\" }"
+
+          if [ $? -ne 0 ]; then
+            echo "Failed to update the New Relic monitor."
+            exit 1
+          else
+            echo "New Relic monitor updated successfully."
+          fi
