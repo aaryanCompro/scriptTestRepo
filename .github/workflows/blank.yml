@@ -1,4 +1,4 @@
-name: Delete New Relic Synthetic Monitor
+name: Update New Relic Synthetic Monitor Script
 
 on:
   push:
@@ -6,27 +6,42 @@ on:
       - seleniumScriptTeacher.js
 
 jobs:
-  delete-monitor:
+  update-script:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Delete New Relic Synthetic Monitor
+      - name: Encode seleniumScriptTeacher.js to Base64
+        id: encode-script
+        run: |
+          if [ ! -f "seleniumScriptTeacher.js" ]; then
+            echo "Error: seleniumScriptTeacher.js file not found."
+            exit 1
+          fi
+          base64_encoded_script=$(base64 -w 0 seleniumScriptTeacher.js)
+          echo "encoded_script=$base64_encoded_script" >> $GITHUB_ENV
+
+      - name: Update New Relic Synthetic Monitor Script
         env:
           API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
           API_ENDPOINT: ${{ secrets.NEW_RELIC_API_ENDPOINT }}
-          MONITOR_ID: ${{ secrets.MONITOR_ID }}
+          MONITOR_UUID: ${{ secrets.MONITOR_UUID }}
+          BASE64_SCRIPT: ${{ env.encoded_script }}
         run: |
-          response=$(curl -s -o response.json -w "%{http_code}" -X DELETE \
+          scriptPayload="{\"scriptText\": \"$BASE64_SCRIPT\"}"
+
+          response=$(curl -s -o response.json -w "%{http_code}" -X PUT \
             -H "Api-Key:$API_KEY" \
-            "$API_ENDPOINT/v3/monitors/$MONITOR_ID")
+            -H 'Content-Type: application/json' \
+            "$API_ENDPOINT/v3/monitors/$MONITOR_UUID/script" \
+            -d "$scriptPayload")
 
           if [ "$response" -eq 204 ]; then
-            echo "New Relic monitor deleted successfully."
+            echo "New Relic monitor script updated successfully."
           else
-            echo "Failed to delete the New Relic monitor. Response:"
+            echo "Failed to update the New Relic monitor script. Response:"
             cat response.json
             exit 1
           fi

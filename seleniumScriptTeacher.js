@@ -2,7 +2,7 @@ const config = {
   "RL-25 B2": {
     skills: {
       Reading: true,
-      Listening: false,
+      Listening: true,
     },
     selectors: {
       bundleCardToggleButtonIdReplacer: "rl-25",
