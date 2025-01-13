@@ -20,7 +20,7 @@ jobs:
             echo "Error: seleniumScriptTeacher.js file not found."
             exit 1
           fi
-          base64_encoded_script=$(base64 -w 0 test.js)
+          base64_encoded_script=$(base64 -w 0 seleniumScriptTeacher.js)
           echo "encoded_script=$base64_encoded_script" >> $GITHUB_ENV
 
       - name: Update New Relic Synthetic Monitor
