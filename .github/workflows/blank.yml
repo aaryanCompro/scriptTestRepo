@@ -36,7 +36,7 @@ jobs:
         set -e  # Exit immediately if a command fails
         
         # Ensure the script exists
-        if [ ! -f "scripts/seleniumScriptTeacher.js" ]; then
+        if [ ! -f "seleniumScriptTeacher.js" ]; then
           echo "Error: New Relic script file not found."
           exit 1
         fi
@@ -48,7 +48,7 @@ jobs:
           https://synthetics.newrelic.com/synthetics/api/v3/monitors/${{ env.MONITOR_ID }}/script \
           -H "X-Api-Key:${{ env.NEW_RELIC_API_KEY }}" \
           -H "Content-Type: application/json" \
-          -d @scripts/seleniumScriptTeacher.js)
+          -d @seleniumScriptTeacher.js)
         
         # Check for HTTP status code 2xx (successful request)
         if [[ "$response" -lt 200 || "$response" -ge 300 ]]; then
