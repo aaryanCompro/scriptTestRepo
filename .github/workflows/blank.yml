@@ -1,46 +1,58 @@
-name: Update New Relic Synthetic Monitor Script
+name: Update New Relic Synthetic Monitor Scripts
 
 on:
   push:
     paths:
       - seleniumScriptTeacher.js
+      - seleniumScriptStudent.js
 
 jobs:
-  update-monitor-script:
+  update-monitor-scripts:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Base64 encode script
-      id: encode-script
-      run: |
-        script_path="./seleniumScriptTeacher.js"
-        if [ ! -f "$script_path" ]; then
-          echo "Error: Script file does not exist: $script_path"
-          exit 1
-        fi
-        base64Encoded=$(base64 -w 0 "$script_path") 
-        echo "::set-output name=encoded-script::$base64Encoded"
-
-    - name: Update Synthetic Monitor Script
+    - name: Base64 encode and update scripts
       env:
         API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
-        MONITOR_UUID: ${{ secrets.NEW_RELIC_MONITOR_UUID }}
         API_ENDPOINT: https://synthetics.newrelic.com/synthetics/api
       run: |
-        SCRIPT_PAYLOAD="{\"scriptText\":\"${{ steps.encode-script.outputs.encoded-script }}\"}"
+        update_script() {
+          local file_path="$1"
+          local monitor_uuid="$2"
+          
+          if [ ! -f "$file_path" ]; then
+            echo "Error: Script file does not exist: $file_path"
+            exit 1
+          fi
 
-        curl -v -X PUT \
-          -H "Api-Key:$API_KEY" \
-          -H 'Content-Type: application/json' \
-          "$API_ENDPOINT/v3/monitors/$MONITOR_UUID/script" \
-          -d "$SCRIPT_PAYLOAD"
+          base64_encoded=$(base64 -w 0 "$file_path")
+          script_payload="{\"scriptText\":\"$base64_encoded\"}"
 
-        if [ $? -ne 0 ]; then
-          echo "Error: Failed to update the Synthetic Monitor script."
-          exit 1
+          curl -v -X PUT \
+            -H "Api-Key:$API_KEY" \
+            -H 'Content-Type: application/json' \
+            "$API_ENDPOINT/v3/monitors/$monitor_uuid/script" \
+            -d "$script_payload"
+
+          if [ $? -ne 0 ]; then
+            echo "Error: Failed to update the Synthetic Monitor script for $file_path."
+            exit 1
+          fi
+
+          echo "Synthetic Monitor script for $file_path updated successfully."
+        }
+
+        # Check if seleniumScriptTeacher.js was modified
+        if git diff --name-only HEAD^ HEAD | grep -q "seleniumScriptTeacher.js"; then
+          echo "Updating seleniumScriptTeacher.js..."
+          update_script "./seleniumScriptTeacher.js" "${{ secrets.NEW_RELIC_MONITOR_UUID_TEACHER }}"
         fi
 
-        echo "Synthetic Monitor script updated successfully."
+        # Check if seleniumScriptStudent.js was modified
+        if git diff --name-only HEAD^ HEAD | grep -q "seleniumScriptStudent.js"; then
+          echo "Updating seleniumScriptStudent.js..."
+          update_script "./seleniumScriptStudent.js" "${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT }}"
+        fi
