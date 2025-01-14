@@ -54,7 +54,7 @@ jobs:
           curl -v -X PUT \
             -H "Api-Key:$API_KEY" \
             -H 'Content-Type: application/json' \
-            "$API_ENDPOINT/v3/monitors/$monitor_uuid/script" \
+            "https://synthetics.newrelic.com/synthetics/api/v3/monitors/$monitor_uuid/script" \
             -d "$script_payload"
 
           if [ $? -ne 0 ]; then
