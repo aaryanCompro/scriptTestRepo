@@ -13,6 +13,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 2 # Fetch at least the last 2 commits to ensure `HEAD^` exists
 
     - name: Base64 encode and update scripts
       env:
@@ -45,6 +47,9 @@ jobs:
           echo "Synthetic Monitor script for $file_path updated successfully."
         }
 
+        # Ensure commit history is fetched
+        git fetch --depth=2 || exit 1
+
         # Check if seleniumScriptTeacher.js was modified
         if git diff --name-only HEAD^ HEAD | grep -q "seleniumScriptTeacher.js"; then
           echo "Updating seleniumScriptTeacher.js..."
@@ -56,3 +61,7 @@ jobs:
           echo "Updating seleniumScriptStudent.js..."
           update_script "./seleniumScriptStudent.js" "${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT }}"
         fi
+
+    - name: Handle first commit case (optional)
+      if: ${{ failure() && github.event.commits | length == 1 }}
+      run: echo "Warning: No parent commit exists (first commit scenario). Skipping diff check."
