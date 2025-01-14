@@ -16,6 +16,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 2 # Fetch at least the last 2 commits to ensure `HEAD^` exists
 
     - name: Set environment variables based on branch
       id: set-env
@@ -63,14 +65,22 @@ jobs:
           echo "Synthetic Monitor script for $file_path updated successfully."
         }
 
-        # Update Teacher Monitor
-        if git diff --name-only HEAD^ HEAD | grep -q "seleniumScriptTeacher.js"; then
-          echo "Updating seleniumScriptTeacher.js for $env..."
+        # Check if this is the first commit or shallow clone
+        if [ "$(git rev-parse --is-shallow-repository)" == "true" ] || [ "$(git rev-list --count HEAD)" -le 1 ]; then
+          echo "First commit or shallow clone detected. Skipping diff check."
+          # Always update both scripts in this case
           update_script "./seleniumScriptTeacher.js" "$MONITOR_UUID_TEACHER"
-        fi
-
-        # Update Student Monitor
-        if git diff --name-only HEAD^ HEAD | grep -q "seleniumScriptStudent.js"; then
-          echo "Updating seleniumScriptStudent.js for $env..."
           update_script "./seleniumScriptStudent.js" "$MONITOR_UUID_STUDENT"
+        else
+          # Update Teacher Monitor
+          if git diff --name-only HEAD^ HEAD | grep -q "seleniumScriptTeacher.js"; then
+            echo "Updating seleniumScriptTeacher.js for $env..."
+            update_script "./seleniumScriptTeacher.js" "$MONITOR_UUID_TEACHER"
+          fi
+
+          # Update Student Monitor
+          if git diff --name-only HEAD^ HEAD | grep -q "seleniumScriptStudent.js"; then
+            echo "Updating seleniumScriptStudent.js for $env..."
+            update_script "./seleniumScriptStudent.js" "$MONITOR_UUID_STUDENT"
+          fi
         fi
