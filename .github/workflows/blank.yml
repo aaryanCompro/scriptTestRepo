@@ -61,7 +61,3 @@ jobs:
           echo "Updating seleniumScriptStudent.js..."
           update_script "./seleniumScriptStudent.js" "${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT }}"
         fi
-
-    - name: Handle first commit case
-      if: ${{ github.event.before == '0000000000000000000000000000000000000000' }}
-      run: echo "Warning: No parent commit exists (first commit scenario). Skipping diff check."
