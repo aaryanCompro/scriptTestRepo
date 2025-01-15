@@ -65,9 +65,6 @@ jobs:
           echo "Synthetic Monitor script for $file_path updated successfully."
         }
 
-        # Ensure commit history is fetched
-        git fetch --depth=2 || exit 1
-
         # Check if seleniumScriptTeacher.js was modified
         if git diff --name-only HEAD^ HEAD | grep -q "seleniumScriptTeacher.js"; then
           echo "Updating seleniumScriptTeacher.js..."
