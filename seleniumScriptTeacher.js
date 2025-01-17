@@ -485,5 +485,5 @@ async function testMosaicAppTeacherC1Integration() {
 
   return;
 }
-
+console.log("hey");
 testMosaicAppTeacherC1Integration();
