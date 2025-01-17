@@ -628,10 +628,10 @@ async function login() {
       50000
     );
     let username = isNewRelicEnvironment()
-      ? $secure.STUDENT_USERNAME
+      ? $secure.STUDENT_USERNAME_DEV
       : loginUsername;
     let password = isNewRelicEnvironment()
-      ? $secure.STUDENT_PASSWORD
+      ? $secure.STUDENT_PASSWORD_DEV
       : loginPassword;
     await loginbtn.click();
     const gigyaLoginForm = await driver.wait(
