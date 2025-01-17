@@ -126,8 +126,8 @@ async function login() {
   try {
     console.log("Click login button");
     let loginbtn = await driver.wait(until.elementLocated(By.className("btn btn-white-bg btn-started c1-btn-disabled login-btn")), 50000);
-    let username = isNewRelicEnvironment() ? $secure.TEACHER_USERNAME_MAIN : loginUsername;
-    let password = isNewRelicEnvironment() ? $secure.TEACHER_PASSWORD_MAIN : loginPassword;
+    let username = isNewRelicEnvironment() ? $secure.TEACHER_USERNAME_DEV : loginUsername;
+    let password = isNewRelicEnvironment() ? $secure.TEACHER_PASSWORD_DEV : loginPassword;
     await loginbtn.click();
     const gigyaLoginForm = await driver.wait(until.elementLocated(By.id("gigya-login-form")), 50000);
     console.log("Input user name");
