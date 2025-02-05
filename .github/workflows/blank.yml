@@ -3,15 +3,22 @@ name: Update New Relic Synthetic Monitor Scripts
 on:
   push:
     branches:
-      - dev
       - qa
+      - stage
+      - prod
     paths:
-      - seleniumScriptTeacher.js
-      - seleniumScriptStudent.js
+      - common-tools/mosaic-early-warning-system-tool/seleniumScriptTeacher.js
+      - common-tools/mosaic-early-warning-system-tool/seleniumScriptStudent.js
 
 jobs:
   update-monitor-scripts:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        env: [qa, stage, prod]
+
+    environment: ${{ matrix.env }}
 
     steps:
     - name: Checkout repository
@@ -22,27 +29,28 @@ jobs:
     - name: Set environment variables based on branch
       id: set-env
       run: |
-        if [ "${{ github.ref_name }}" == "dev" ]; then
-          echo "env=dev" >> $GITHUB_ENV
-          echo "API_KEY=${{ secrets.NEW_RELIC_API_KEY }}" >> $GITHUB_ENV
-          echo "MONITOR_UUID_TEACHER=${{ secrets.NEW_RELIC_MONITOR_UUID_TEACHER_DEV }}" >> $GITHUB_ENV
-          echo "MONITOR_UUID_STUDENT=${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT_DEV }}" >> $GITHUB_ENV
+        if [ "${{ github.ref_name }}" == "prod" ]; then
+          echo "env=prod" >> $GITHUB_ENV
         elif [ "${{ github.ref_name }}" == "qa" ]; then
           echo "env=qa" >> $GITHUB_ENV
-          echo "API_KEY=${{ secrets.NEW_RELIC_API_KEY }}" >> $GITHUB_ENV
-          echo "MONITOR_UUID_TEACHER=${{ secrets.NEW_RELIC_MONITOR_UUID_TEACHER_QA }}" >> $GITHUB_ENV
-          echo "MONITOR_UUID_STUDENT=${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT_QA }}" >> $GITHUB_ENV
+        elif [ "${{ github.ref_name }}" == "stage" ]; then
+          echo "env=stage" >> $GITHUB_ENV
         else
           echo "Error: Unsupported branch: ${{ github.ref_name }}"
-          exit 1
+   how        exit 1
         fi
 
     - name: Base64 encode and update scripts
+      env:
+        API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
+        API_ENDPOINT: ${{ secrets.NEW_RELIC_API_ENDPOINT }}
+        MONITOR_UUID_TEACHER: ${{ secrets.NEW_RELIC_MONITOR_UUID_TEACHER }}
+        MONITOR_UUID_STUDENT: ${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT }}
       run: |
         update_script() {
           local file_path="$1"
           local monitor_uuid="$2"
-          
+
           if [ ! -f "$file_path" ]; then
             echo "Error: Script file does not exist: $file_path"
             exit 1
@@ -54,7 +62,7 @@ jobs:
           curl -v -X PUT \
             -H "Api-Key:$API_KEY" \
             -H 'Content-Type: application/json' \
-            "https://synthetics.newrelic.com/synthetics/api/v3/monitors/$monitor_uuid/script" \
+            "$API_ENDPOINT/v3/monitors/$monitor_uuid/script" \
             -d "$script_payload"
 
           if [ $? -ne 0 ]; then
@@ -62,17 +70,17 @@ jobs:
             exit 1
           fi
 
-          echo "Synthetic Monitor script for $file_path updated successfully."
+          echo "Synthetic Monitor script for $file_path and monitor id $monitor_uuid updated successfully."
         }
 
         # Check if seleniumScriptTeacher.js was modified
-        if git diff --name-only HEAD^ HEAD | grep -q "seleniumScriptTeacher.js"; then
+        if git diff --name-only HEAD^ HEAD | grep -q "common-tools/mosaic-early-warning-system-tool/seleniumScriptTeacher.js"; then
           echo "Updating seleniumScriptTeacher.js..."
-          update_script "./seleniumScriptTeacher.js" "$MONITOR_UUID_TEACHER"
+          update_script "./common-tools/mosaic-early-warning-system-tool/seleniumScriptTeacher.js" "$MONITOR_UUID_TEACHER"
         fi
 
         # Check if seleniumScriptStudent.js was modified
-        if git diff --name-only HEAD^ HEAD | grep -q "seleniumScriptStudent.js"; then
+        if git diff --name-only HEAD^ HEAD | grep -q "common-tools/mosaic-early-warning-system-tool/seleniumScriptStudent.js"; then
           echo "Updating seleniumScriptStudent.js..."
-          update_script "./seleniumScriptStudent.js" "$MONITOR_UUID_STUDENT"
+          update_script "./common-tools/mosaic-early-warning-system-tool/seleniumScriptStudent.js" "$MONITOR_UUID_STUDENT"
         fi
