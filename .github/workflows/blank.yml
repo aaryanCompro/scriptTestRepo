@@ -70,11 +70,11 @@ jobs:
         # Check if seleniumScriptTeacher.js was modified
         if git diff --name-only HEAD^ HEAD | grep -q "seleniumScriptTeacher.js"; then
           echo "Updating seleniumScriptTeacher.js..."
-          update_script ".seleniumScriptTeacher.js" "$MONITOR_UUID_TEACHER"
+          update_script "./seleniumScriptTeacher.js" "$MONITOR_UUID_TEACHER"
         fi
 
         # Check if seleniumScriptStudent.js was modified
         if git diff --name-only HEAD^ HEAD | grep -q "seleniumScriptStudent.js"; then
           echo "Updating seleniumScriptStudent.js..."
-          update_script ".seleniumScriptStudent.js" "$MONITOR_UUID_STUDENT"
+          update_script "./seleniumScriptStudent.js" "$MONITOR_UUID_STUDENT"
         fi
