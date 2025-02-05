@@ -36,14 +36,4 @@ const config = {
   },
 };
 
-let driver;
-let chrome;
-let By, until;
-let cfAccessClientId;
-let cfAccessClientSecret;
-let loginUsername;
-let loginPassword;
-let createdAssignmentName = null;
-let areMultipleSkillsPresent = false; // global flag to check whether multiple skills are present or not in a bundle
-let configResult = {}; // global result object to check for final error for script
 
