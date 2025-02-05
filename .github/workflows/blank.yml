@@ -34,12 +34,12 @@ jobs:
           exit 1
 
     - name: Base64 encode and update scripts
-      environment: ${{ env.env }}
       env:
         API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
         API_ENDPOINT: ${{ secrets.NEW_RELIC_API_ENDPOINT }}
         MONITOR_UUID_TEACHER: ${{ secrets.NEW_RELIC_MONITOR_UUID_TEACHER }}
         MONITOR_UUID_STUDENT: ${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT }}
+        ENV: ${{ env.env }}
       run: |
         update_script() {
           local file_path="$1"
