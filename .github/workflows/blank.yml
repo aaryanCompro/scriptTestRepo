@@ -3,7 +3,7 @@ name: Update New Relic Synthetic Monitor Scripts
 on:
   push:
     branches:
-      - qa
+      - dev
       - stage
       - prod
     paths:
@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        env: [qa, stage, prod]
+        env: [dev, stage, prod]
 
     environment: ${{ matrix.env }}
 
@@ -31,8 +31,8 @@ jobs:
       run: |
         if [ "${{ github.ref_name }}" == "prod" ]; then
           echo "env=prod" >> $GITHUB_ENV
-        elif [ "${{ github.ref_name }}" == "qa" ]; then
-          echo "env=qa" >> $GITHUB_ENV
+        elif [ "${{ github.ref_name }}" == "dev" ]; then
+          echo "env=dev" >> $GITHUB_ENV
         elif [ "${{ github.ref_name }}" == "stage" ]; then
           echo "env=stage" >> $GITHUB_ENV
         else
