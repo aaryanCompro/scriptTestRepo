@@ -24,28 +24,11 @@ jobs:
     - name: Set environment variables based on branch
       id: set-env
       run: |
-        if [ "${{ github.ref_name }}" == "dev" ]; then
-          echo "env=dev" >> $GITHUB_ENV
-          echo "API_KEY=${{ secrets.NEW_RELIC_API_KEY }}" >> $GITHUB_ENV
-          echo "API_ENDPOINT=${{ secrets.NEW_RELIC_API_ENDPOINT }}" >> $GITHUB_ENV
-          echo "MONITOR_UUID_TEACHER=${{ secrets.NEW_RELIC_MONITOR_UUID_TEACHER }}" >> $GITHUB_ENV
-          echo "MONITOR_UUID_STUDENT=${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT }}" >> $GITHUB_ENV
-        elif [ "${{ github.ref_name }}" == "qa" ]; then
-          echo "env=qa" >> $GITHUB_ENV
-          echo "API_ENDPOINT=${{ secrets.NEW_RELIC_API_ENDPOINT }}" >> $GITHUB_ENV
-          echo "API_KEY=${{ secrets.NEW_RELIC_API_KEY }}" >> $GITHUB_ENV
-          echo "MONITOR_UUID_TEACHER=${{ secrets.NEW_RELIC_MONITOR_UUID_TEACHER }}" >> $GITHUB_ENV
-          echo "MONITOR_UUID_STUDENT=${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT }}" >> $GITHUB_ENV
-        elif [ "${{ github.ref_name }}" == "stage" ]; then
-          echo "env=stage" >> $GITHUB_ENV
-          echo "API_ENDPOINT=${{ secrets.NEW_RELIC_API_ENDPOINT }}" >> $GITHUB_ENV
-          echo "API_KEY=${{ secrets.NEW_RELIC_API_KEY }}" >> $GITHUB_ENV
-          echo "MONITOR_UUID_TEACHER=${{ secrets.NEW_RELIC_MONITOR_UUID_TEACHER }}" >> $GITHUB_ENV
-          echo "MONITOR_UUID_STUDENT=${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT }}" >> $GITHUB_ENV
-        else
-          echo "Error: Unsupported branch: ${{ github.ref_name }}"
-          exit 1
-        fi
+        echo "env=${{ github.ref_name }}" >> $GITHUB_ENV
+        echo "API_KEY=${{ secrets.NEW_RELIC_API_KEY }}" >> $GITHUB_ENV
+        echo "API_ENDPOINT=${{ secrets.NEW_RELIC_API_ENDPOINT }}" >> $GITHUB_ENV
+        echo "MONITOR_UUID_TEACHER=${{ secrets.NEW_RELIC_MONITOR_UUID_TEACHER }}" >> $GITHUB_ENV
+        echo "MONITOR_UUID_STUDENT=${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT }}" >> $GITHUB_ENV
 
     - name: Base64 encode and update scripts
       run: |
