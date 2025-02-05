@@ -37,7 +37,7 @@ jobs:
           echo "env=stage" >> $GITHUB_ENV
         else
           echo "Error: Unsupported branch: ${{ github.ref_name }}"
-   how        exit 1
+          exit 1
         fi
 
     - name: Base64 encode and update scripts
