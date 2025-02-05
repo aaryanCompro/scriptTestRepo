@@ -3,9 +3,9 @@ name: Update New Relic Synthetic Monitor Scripts
 on:
   push:
     branches:
-      - dev
+      - qa
       - stage
-      - prod
+      - dev
     paths:
       - seleniumScriptTeacher.js
       - seleniumScriptStudent.js
@@ -13,6 +13,7 @@ on:
 jobs:
   update-monitor-scripts:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'qa' ||  github.ref == 'refs/heads/stage' && 'stage' ||  github.ref == 'refs/heads/dev' && 'dev' || 'dev' }}  # Default to 'dev' if none of the above match
 
     steps:
     - name: Checkout repository
@@ -20,31 +21,38 @@ jobs:
       with:
         fetch-depth: 2 # Fetch at least the last 2 commits to ensure `HEAD^` exists
 
-    - name: Set environment based on branch
+    - name: Set environment variables based on branch
       id: set-env
       run: |
-        if [ "${{ github.ref_name }}" == "prod" ]; then
-          echo "env=prod" >> $GITHUB_ENV
-        elif [ "${{ github.ref_name }}" == "dev" ]; then
+        if [ "${{ github.ref_name }}" == "dev" ]; then
           echo "env=dev" >> $GITHUB_ENV
+          echo "API_KEY=${{ secrets.NEW_RELIC_API_KEY }}" >> $GITHUB_ENV
+          echo "API_ENDPOINT=${{ secrets.NEW_RELIC_API_ENDPOINT }}" >> $GITHUB_ENV
+          echo "MONITOR_UUID_TEACHER=${{ secrets.NEW_RELIC_MONITOR_UUID_TEACHER }}" >> $GITHUB_ENV
+          echo "MONITOR_UUID_STUDENT=${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT }}" >> $GITHUB_ENV
+        elif [ "${{ github.ref_name }}" == "qa" ]; then
+          echo "env=qa" >> $GITHUB_ENV
+          echo "API_ENDPOINT=${{ secrets.NEW_RELIC_API_ENDPOINT }}" >> $GITHUB_ENV
+          echo "API_KEY=${{ secrets.NEW_RELIC_API_KEY }}" >> $GITHUB_ENV
+          echo "MONITOR_UUID_TEACHER=${{ secrets.NEW_RELIC_MONITOR_UUID_TEACHER }}" >> $GITHUB_ENV
+          echo "MONITOR_UUID_STUDENT=${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT }}" >> $GITHUB_ENV
         elif [ "${{ github.ref_name }}" == "stage" ]; then
           echo "env=stage" >> $GITHUB_ENV
+          echo "API_ENDPOINT=${{ secrets.NEW_RELIC_API_ENDPOINT }}" >> $GITHUB_ENV
+          echo "API_KEY=${{ secrets.NEW_RELIC_API_KEY }}" >> $GITHUB_ENV
+          echo "MONITOR_UUID_TEACHER=${{ secrets.NEW_RELIC_MONITOR_UUID_TEACHER }}" >> $GITHUB_ENV
+          echo "MONITOR_UUID_STUDENT=${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT }}" >> $GITHUB_ENV
         else
           echo "Error: Unsupported branch: ${{ github.ref_name }}"
           exit 1
+        fi
 
     - name: Base64 encode and update scripts
-      env:
-        API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
-        API_ENDPOINT: ${{ secrets.NEW_RELIC_API_ENDPOINT }}
-        MONITOR_UUID_TEACHER: ${{ secrets.NEW_RELIC_MONITOR_UUID_TEACHER }}
-        MONITOR_UUID_STUDENT: ${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT }}
-        ENV: ${{ env.env }}
       run: |
         update_script() {
           local file_path="$1"
           local monitor_uuid="$2"
-
+          
           if [ ! -f "$file_path" ]; then
             echo "Error: Script file does not exist: $file_path"
             exit 1
