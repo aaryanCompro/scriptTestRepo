@@ -58,8 +58,9 @@ jobs:
             echo "Synthetic Monitor script for $file_path and monitor id $monitor_uuid updated successfully."
           else
             echo "Error: Failed to update the Synthetic Monitor script for $file_path"
-            # Optionally, you could also print out more details by reading the response body:
-            # cat /tmp/monitor_update_response
+            echo "HTTP Status Code: $response_status"
+            echo "Response Body:"
+            cat /tmp/monitor_update_response
             exit 1
           fi    
         }
