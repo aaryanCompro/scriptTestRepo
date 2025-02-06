@@ -1,9 +1,1 @@
-console.log("Test To check errors");
-console.log("Test To check errors");
-console.log("Test To check errors");
-console.log("Test To check errors");
-console.log("Test To check errors");
-console.log("Test To check errors");
-console.log("Test To check errors");
-console.log("Test To check errors");
-console.log("Test To check errors");
+console.log("Test To check");
