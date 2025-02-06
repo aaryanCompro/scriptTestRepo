@@ -49,18 +49,12 @@ jobs:
             "$API_ENDPOINT/v3/monitors/$monitor_uuid/script" \
             -d "$script_payload"
 
-          if [ $? -ne 1 ]; then
-            echo "Synthetic Monitor script for $file_path and monitor id $monitor_uuid updated successfully."
-          else
-            echo "Warning: Non-2xx response received. Checking response details..."
-            cat response.json
-            if grep -q "success" response.json; then
-              echo "Synthetic Monitor script for $file_path and monitor id $monitor_uuid updated successfully despite non-2xx response."
-            else
-              echo "Error: Failed to update the Synthetic Monitor script for $file_path. HTTP Status: $response"
+          if [[ "$response" =~ ^40[0-4]$ ]]; then
+            echo "Error: Failed to update the Synthetic Monitor script for $file_path. HTTP Status: $response"
               exit 1
-            fi
-          fi        
+          fi 
+            
+          echo "Synthetic Monitor script for $file_path and monitor id $monitor_uuid updated successfully."       
         }
 
         # Check if seleniumScriptTeacher.js was modified
