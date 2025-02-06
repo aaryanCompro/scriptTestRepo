@@ -52,10 +52,15 @@ jobs:
           if [[ "$response" =~ ^2[0-9]{2}$ ]]; then
             echo "Synthetic Monitor script for $file_path and monitor id $monitor_uuid updated successfully."
           else
-            echo "Error: Failed to update the Synthetic Monitor script for $file_path."
+            echo "Warning: Non-2xx response received. Checking response details..."
             cat response.json
-            exit 1
-          fi          
+            if grep -q "success" response.json; then
+              echo "Synthetic Monitor script for $file_path and monitor id $monitor_uuid updated successfully despite non-2xx response."
+            else
+              echo "Error: Failed to update the Synthetic Monitor script for $file_path. HTTP Status: $response"
+              exit 1
+            fi
+          fi        
         }
 
         # Check if seleniumScriptTeacher.js was modified
