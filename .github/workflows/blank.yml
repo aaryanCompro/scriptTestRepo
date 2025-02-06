@@ -13,7 +13,7 @@ on:
 jobs:
   update-monitor-scripts:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'qa' ||  github.ref == 'refs/heads/stage' && 'stage' ||  github.ref == 'refs/heads/dev' && 'dev' || 'dev' }}  # Default to 'dev' if none of the above match
+    environment: ${{ github.ref == 'refs/heads/main' && 'qa' ||  github.ref == 'refs/heads/stage' && 'stage' ||  github.ref == 'refs/heads/dev' && 'dev' || 'dev' }}
 
     steps:
     - name: Checkout repository
@@ -24,13 +24,12 @@ jobs:
     - name: Set environment variables based on branch
       id: set-env
       run: |
-        echo "env=${{ github.ref_name }}" >> $GITHUB_ENV
         echo "API_KEY=${{ secrets.NEW_RELIC_API_KEY }}" >> $GITHUB_ENV
         echo "API_ENDPOINT=${{ secrets.NEW_RELIC_API_ENDPOINT }}" >> $GITHUB_ENV
         echo "MONITOR_UUID_TEACHER=${{ secrets.NEW_RELIC_MONITOR_UUID_TEACHER }}" >> $GITHUB_ENV
         echo "MONITOR_UUID_STUDENT=${{ secrets.NEW_RELIC_MONITOR_UUID_STUDENT }}" >> $GITHUB_ENV
 
-    - name: Base64 encode and update scripts
+    - name: Updating the scripts in Monitors
       run: |
         update_script() {
           local file_path="$1"
@@ -50,12 +49,13 @@ jobs:
             "$API_ENDPOINT/v3/monitors/$monitor_uuid/script" \
             -d "$script_payload"
 
-          if [ $? -ne 0 ]; then
+          if [[ "$response" =~ ^2[0-9]{2}$ ]]; then
+            echo "Synthetic Monitor script for $file_path and monitor id $monitor_uuid updated successfully."
+          else
             echo "Error: Failed to update the Synthetic Monitor script for $file_path."
+            cat response.json
             exit 1
-          fi
-
-          echo "Synthetic Monitor script for $file_path and monitor id $monitor_uuid updated successfully."
+          fi          
         }
 
         # Check if seleniumScriptTeacher.js was modified
