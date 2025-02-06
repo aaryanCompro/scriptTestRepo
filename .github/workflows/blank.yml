@@ -49,7 +49,7 @@ jobs:
             "$API_ENDPOINT/v3/monitors/$monitor_uuid/script" \
             -d "$script_payload"
 
-          if [[ "$response" =~ ^40[0-4]$ ]]; then
+          if [[ "$response" -ge 400 && "$response" -le 404 ]]; then
             echo "Error: Failed to update the Synthetic Monitor script for $file_path. HTTP Status: $response"
               exit 1
           fi 
