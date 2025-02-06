@@ -43,19 +43,23 @@ jobs:
           base64_encoded=$(base64 -w 0 "$file_path")
           script_payload="{\"scriptText\":\"$base64_encoded\"}"
 
-          curl -v -X PUT \
+          # Capture both the response body and the HTTP status code.
+          # -s = silent mode
+          # -w "%{http_code}" = write out the HTTP status code
+          # -o /tmp/monitor_update_response = write the actual response body to a file
+          response_status=$(curl -s -w "%{http_code}" -o /tmp/monitor_update_response \
+            -X PUT \
             -H "Api-Key:$API_KEY" \
             -H 'Content-Type: application/json' \
             "$API_ENDPOINT/v3/monitors/$monitor_uuid/script" \
-            -d "$script_payload"
+            -d "$script_payload")
 
           if [ "$response_status" -ge 200 ] && [ "$response_status" -lt 300 ]; then
             echo "Synthetic Monitor script for $file_path and monitor id $monitor_uuid updated successfully."
           else
-            echo "Error: Failed to update the Synthetic Monitor script for $file_path (Monitor ID: $monitor_uuid)."
-            echo "HTTP Status Code: $response_status"
-            echo "Response Body:"
-            cat /tmp/monitor_update_response
+            echo "Error: Failed to update the Synthetic Monitor script for $file_path"
+            # Optionally, you could also print out more details by reading the response body:
+            # cat /tmp/monitor_update_response
             exit 1
           fi    
         }
