@@ -6,7 +6,6 @@ on:
       - main
       - dev
       - qa
-      - stage
 
 jobs:
   build:
