@@ -1,0 +1,43 @@
+name: CI/CD Pipeline with Manual Approval
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - qa
+
+jobs:
+  build:
+    name: Build Job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Run Build Process
+        run: echo "Building the project..."
+
+      - name: Build Completed
+        run: echo "Build process completed successfully!"
+
+  approval:
+    name: Await Manual Approval
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require Manual Approval
+        uses: cheshire137/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          prompt: "Deploy to AWS?"
+          allowed-usernames: aaryanCompro
+          timeout-minutes: 60  # Timeout if no response within 1 hour
+
+  deploy:
+    name: Deploy to AWS
+    needs: approval
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy Application
+        run: echo "Deploying application after manual approval..."
