@@ -21,14 +21,16 @@ jobs:
       - name: Build Completed
         run: echo "Build process completed successfully!"
 
-  deploy:
-    name: Deploy Job (Requires Manual Approval)
-    runs-on: ubuntu-latest
-    needs: build  # Waits for 'build' job to finish
-    environment: qa  # Triggers manual approval
-    steps:
-      - name: Deployment Step
-        run: echo "Deploying application after manual approval..."
+      - name: Await Manual Approval
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          # Provide GitHub usernames or a single user if you're on a free plan.
+          # If you need multiple approvals, separate with commas and set minimum-approvals accordingly.
+          approvers: aaryanCompro
+          minimum-approvals: 1
+          issue-title: "Manual Approval Required for SAM Deploy"
+          issue-body: "Please comment 'Approved' (or 'Denied') on this issue. The deploy step will proceed only upon approval."
 
-      - name: Deployment Completed
-        run: echo "Deployment successful!"
+      - name: Deploy to AWS
+        run: echo "Deploying application after manual approval..."
