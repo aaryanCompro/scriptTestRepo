@@ -7,6 +7,10 @@ on:
       - dev
       - qa
 
+permissions: # Add this section
+  issues: write
+  pull-requests: write # Optional if you want to use PR-based approvals
+
 jobs:
   build:
     name: Build Job
@@ -25,8 +29,6 @@ jobs:
         uses: trstringer/manual-approval@v1
         with:
           secret: ${{ secrets.GITHUB_TOKEN }}
-          # Provide GitHub usernames or a single user if you're on a free plan.
-          # If you need multiple approvals, separate with commas and set minimum-approvals accordingly.
           approvers: aaryanCompro
           minimum-approvals: 1
           issue-title: "Manual Approval Required for SAM Deploy"
