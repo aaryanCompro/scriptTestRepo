@@ -40,4 +40,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy Application
-        run: echo "Deploying application after manual approval..."
+        run: echo "Deploying application after manual approval.."
